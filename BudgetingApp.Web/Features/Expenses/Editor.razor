@@ -1,0 +1,136 @@
+@using BudgetingApp.Web.Features.Expenses
+@using BudgetingApp.Data.Models
+@using MudBlazor
+@using BudgetingApp.Web.Features.Persons
+@inject IMediator Mediator
+
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudGrid>
+        <MudItem xs="12" md="6">
+            <MudTextField @bind-Value="Model.Name" Label="Name" Variant="Variant.Outlined" FullWidth="true" />
+            <MudNumericField @bind-Value="Model.Cost" Label="Cost" Variant="Variant.Outlined" FullWidth="true" Adornment="Adornment.Start" AdornmentText="$" HideSpinButtons />
+            <MudSelect @bind-Value="Model.Frequency" Label="Frequency" Variant="Variant.Outlined" FullWidth="true">
+                @foreach(var itm in Enum.GetValues(typeof(ExpenseFrequency)).Cast<ExpenseFrequency>())
+                {
+                    <MudSelectItem Value="itm">@itm</MudSelectItem>
+                }
+            </MudSelect>
+            <MudCheckBox T="bool" @bind-Checked="Model.IncludeInBillsAccount" Label="Include in Bills Account" />
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            <MudGrid Spacing="0">
+                <MudItem xs="12" >
+                    <MudAutocomplete T="Person" @bind-Value="SelectedPerson" Label="Add Responsible Person" Variant="Variant.Outlined" FullWidth="true"
+                                     ToStringFunc="@(p => p != null ? p.Name : null)" SearchFunc="SearchPersonsAsync">
+                        <NoItemsTemplate>
+                            @if(SearchText.HasValue())
+                            {
+                                <MudButton Variant="Variant.Text" Class="mud-p-2" OnClick="AddNewPerson" FullWidth>Add "@SearchText"</MudButton>
+                            }
+                        </NoItemsTemplate>
+                    </MudAutocomplete>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField T="double" @bind-Value="SelectedPercentage" Label="Percent" Adornment="Adornment.End" AdornmentText="%" Variant="Variant.Outlined" HideSpinButtons />
+                </MudItem>
+                <MudItem xs="12" md="6" Class="align-content-center px-2">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddPerson" FullWidth>Add</MudButton>
+                </MudItem>
+            </MudGrid>
+            <MudTable Items="@Model.PersonExpenses" Hover="true" Bordered="true" Striped="true">
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Percent</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Name">@context.Person.Name</MudTd>
+                    <MudTd DataLabel="Percent">@context.Percentage</MudTd>
+                    <MudTd DataLabel="Actions">
+                        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="() => RemovePerson(context)">Remove</MudButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudItem>
+    </MudGrid>
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save">Save</MudButton>
+    <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="Cancel">Cancel</MudButton>
+</MudContainer>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public int? ExpenseId { get; set; }
+
+    private SaveCommand Model { get; set; } = new();
+    private Person SelectedPerson { get; set; } = new();
+    private string SearchText { get; set; } = string.Empty;
+    private double SelectedPercentage { get; set; } = 0.0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        Model = await Mediator.Send(new SaveQuery { ExpenseId = ExpenseId });
+    }
+
+    private async Task<IEnumerable<Person>> SearchPersonsAsync(string value, CancellationToken ct)
+    {
+        SearchText = value;
+
+        var filteredPersons = await Task.Run(() =>
+        {
+            return Model.Persons?
+                .Where(p => !Model.PersonExpenses.Any(pe => pe.Person.PersonId == p.PersonId))
+                .ToList() ?? new List<Person>();
+        });
+
+        if (!value.HasValue()) return filteredPersons;
+
+        return filteredPersons
+            .Where(p => p.Name.Contains(value, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+    }
+
+
+    private void AddNewPerson()
+    {
+        if (!string.IsNullOrWhiteSpace(SearchText))
+        {
+            SelectedPerson = new Person { Name = SearchText };
+            //Model.PersonExpenses.Add(new PersonExpense { Person = newPerson, Percentage = SelectedPercentage });
+            SearchText = string.Empty;
+        }
+    }
+
+    private void AddPerson()
+    {
+        if (SelectedPerson != null && !Model.PersonExpenses.Any(p => p.Person.PersonId == SelectedPerson.PersonId))
+        {
+            Model.PersonExpenses.Add(new PersonExpense { PersonId = SelectedPerson.PersonId, Person = SelectedPerson, Percentage = SelectedPercentage });
+            SelectedPerson = null;
+        }
+    }
+
+    private void RemovePerson(PersonExpense personExpense)
+    {
+        Model.PersonExpenses.Remove(personExpense);
+    }
+
+    private async Task Save()
+    {
+        var result = await Mediator.Send(Model);
+
+        if(result != default(int))
+        {
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

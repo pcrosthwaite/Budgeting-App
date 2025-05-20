@@ -1,0 +1,40 @@
+@using BudgetingApp.Data.Models
+@using MudBlazor
+@inject IMediator Mediator
+
+<MudContainer MaxWidth="MaxWidth.Medium">
+    <MudTextField @bind-Value="Model.Name" Label="Name" Variant="Variant.Filled" FullWidth="true" />
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save">Save</MudButton>
+    <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="Cancel">Cancel</MudButton>
+</MudContainer>
+
+@code {
+    [CascadingParameter]
+    IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public int? PersonId { get; set; }
+
+    private SaveCommand Model { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (PersonId.HasValue)
+        {
+            Model = await Mediator.Send(new SaveQuery { PersonId = PersonId.Value });
+        }
+    }
+
+    private async Task Save()
+    {
+        await Mediator.Send(Model);
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}
