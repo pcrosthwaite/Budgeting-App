@@ -6,10 +6,12 @@ namespace BudgetingApp.Data.Services
     public class ExpenseService
     {
         private readonly BudgetingDbContext _context;
+        private readonly PersonService _personService;
 
-        public ExpenseService(BudgetingDbContext context)
+        public ExpenseService(BudgetingDbContext context, PersonService personService)
         {
             _context = context;
+            _personService = personService;
         }
 
         public async Task<ICollection<Expense>> GetExpensesAsync()
@@ -25,8 +27,9 @@ namespace BudgetingApp.Data.Services
             if (!expenseId.HasValue) return null;
 
             return await _context.Expenses
-                            .Include(e => e.PersonExpenses)
-                                .ThenInclude(pe => pe.Person)
+                            .Include(e => e.ExpenseCategory)
+                            //.Include(e => e.PersonExpenses)
+                            //    .ThenInclude(pe => pe.Person)
                             .FirstOrDefaultAsync(e => e.ExpenseId == expenseId.Value);
         }
 
@@ -82,32 +85,6 @@ namespace BudgetingApp.Data.Services
             return result;
         }
 
-        public async Task AddUpdatePersonExpensesAsync(int expenseId, List<PersonExpense> personExpenses)
-        {
-            var targetExpenses = new List<PersonExpense>();
-            targetExpenses.AddRange(personExpenses);
-
-            foreach (var personExpense in targetExpenses)
-            {
-                var dest = await _context.PersonExpenses.FirstOrDefaultAsync(pe => pe.ExpenseId == expenseId && pe.PersonId == personExpense.PersonId);
-                var isNew = false;
-
-                if (dest == null)
-                {
-                    dest = new PersonExpense();
-                    isNew = true;
-                }
-
-                dest.PersonId = personExpense.PersonId;
-                dest.ExpenseId = expenseId;
-                dest.Percentage = personExpense.Percentage;
-
-                _context.AddOrUpdate(dest, add: isNew);
-            }
-
-            await _context.SaveChangesAsync();
-        }
-
         public async Task<bool> RemoveExpenseResponsiblePersonsAsync(int expenseId, List<int> personIdsToRemove)
         {
             var existingRecords = await _context.PersonExpenses
@@ -116,7 +93,7 @@ namespace BudgetingApp.Data.Services
 
             foreach (var record in existingRecords)
             {
-                _context.PersonExpenses.Remove(record);
+                _context.Remove(record);
             }
 
             await _context.SaveChangesAsync();

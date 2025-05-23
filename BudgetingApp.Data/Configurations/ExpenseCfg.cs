@@ -9,6 +9,12 @@ namespace BudgetingApp.Data.Configurations
         public void Configure(EntityTypeBuilder<Expense> builder)
         {
             builder.Property(x => x.Name).HasMaxLength(300);
+
+            builder
+                .HasOne(x => x.ExpenseCategory)
+                .WithMany(x => x.Expenses)
+                .HasForeignKey(x => x.CategoryId)
+                .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }

@@ -14,7 +14,7 @@ namespace BudgetingApp.Web.Features.Expenses
         public int ExpenseId { get; set; } // Primary Key
         public string Name { get; set; }
         public decimal Cost { get; set; }
-        public ExpenseFrequency Frequency { get; set; }
+        public TransactionFrequency Frequency { get; set; }
         public bool IncludeInBillsAccount { get; set; }
 
         // Navigation property for the many-to-many relationship

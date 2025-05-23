@@ -1,0 +1,69 @@
+@page "/categories"
+@using BudgetingApp.Data.Models
+@using MudBlazor
+@using BudgetingApp.Web.Shared
+@inject IMediator Mediator
+@inject IDialogService DialogService
+
+<MudContainer>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => OpenEditDialog(null)">Add Person</MudButton>
+
+    <MudTable Items="@Model.Data" Hover="true" Bordered="true" Striped="true">
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Colour">
+                @if (context.HexColourCode.HasValue())
+                {
+                    <MudChip T="string" Style="@($"background-color: {context.HexColourCode}; color: #fff;")">
+                        @context.HexColourCode
+                    </MudChip>
+                } else
+                {
+                    <MudText>None</MudText>
+                }
+            </MudTd>
+            <MudTd DataLabel="Actions">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => OpenEditDialog(context.CategoryId)">Edit</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="() => OpenDeleteDialog(context.CategoryId, context.Name)">Delete</MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private IndexQuery Model { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Model = await Mediator.Send(new IndexQuery());
+    }
+
+    private async Task OpenEditDialog(int? categoryId)
+    {
+        var parameters = new DialogParameters { ["CategoryId"] = categoryId };
+        var dialog = await DialogService.ShowAsync<Editor>("Edit", parameters);
+        var result = await dialog.Result;
+
+        if (!result?.Canceled ?? true)
+        {
+            await OnInitializedAsync();
+        }
+    }
+
+    private async Task OpenDeleteDialog(int categoryId, string identifier = "this item")
+    {
+        var parameters = new DialogParameters { ["Content"] = $"Are you sure you want to delete this {identifier}?" };
+        var dialog = await DialogService.ShowAsync<Confirm>("Confirm Delete", parameters);
+        var result = await dialog.Result;
+
+        if (!result?.Canceled ?? false)
+        {
+            await Mediator.Send(new DeleteCommand { CategoryId = categoryId });
+            await OnInitializedAsync();
+        }
+    }
+}

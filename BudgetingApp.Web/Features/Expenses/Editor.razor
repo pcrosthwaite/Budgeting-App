@@ -10,12 +10,18 @@
             <MudTextField @bind-Value="Model.Name" Label="Name" Variant="Variant.Outlined" FullWidth="true" />
             <MudNumericField @bind-Value="Model.Cost" Label="Cost" Variant="Variant.Outlined" FullWidth="true" Adornment="Adornment.Start" AdornmentText="$" HideSpinButtons />
             <MudSelect @bind-Value="Model.Frequency" Label="Frequency" Variant="Variant.Outlined" FullWidth="true">
-                @foreach(var itm in Enum.GetValues(typeof(ExpenseFrequency)).Cast<ExpenseFrequency>())
+                @foreach (var itm in Enum.GetValues(typeof(TransactionFrequency)).Cast<TransactionFrequency>())
                 {
                     <MudSelectItem Value="itm">@itm</MudSelectItem>
                 }
             </MudSelect>
-            <MudCheckBox T="bool" @bind-Checked="Model.IncludeInBillsAccount" Label="Include in Bills Account" />
+            <MudCheckBox @bind-Value="Model.IncludeInBillsAccount" Label="Include in Bills Transfer" />
+            <MudSelect T="ExpenseCategory" @bind-Value="SelectedCategory" Label="Category" Variant="Variant.Outlined" FullWidth="true">
+                @foreach (var category in Model.ExpenseCategories)
+                {
+                    <MudSelectItem Value="category">@category.Name</MudSelectItem>
+                }
+            </MudSelect>
         </MudItem>
 
         <MudItem xs="12" md="6">
@@ -45,7 +51,7 @@
                     <MudTh>Actions</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="Name">@context.Person.Name</MudTd>
+                    <MudTd DataLabel="Name">@context.PersonName</MudTd>
                     <MudTd DataLabel="Percent">@context.Percentage</MudTd>
                     <MudTd DataLabel="Actions">
                         <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="() => RemovePerson(context)">Remove</MudButton>
@@ -69,11 +75,15 @@
     private Person SelectedPerson { get; set; } = new();
     private string SearchText { get; set; } = string.Empty;
     private double SelectedPercentage { get; set; } = 0.0;
+    private ExpenseCategory SelectedCategory { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
         Model = await Mediator.Send(new SaveQuery { ExpenseId = ExpenseId });
+
+        // Set the selected category if it exists
+        SelectedCategory = Model.ExpenseCategories.FirstOrDefault(c => c.CategoryId == Model.CategoryId);
     }
 
     private async Task<IEnumerable<Person>> SearchPersonsAsync(string value, CancellationToken ct)
@@ -82,9 +92,11 @@
 
         var filteredPersons = await Task.Run(() =>
         {
-            return Model.Persons?
-                .Where(p => !Model.PersonExpenses.Any(pe => pe.Person.PersonId == p.PersonId))
+            var list = Model.Persons?
+                .Where(p => !Model.PersonExpenses.Any(pe => pe.PersonId == p.PersonId))
                 .ToList() ?? new List<Person>();
+
+            return list;
         });
 
         if (!value.HasValue()) return filteredPersons;
@@ -107,23 +119,28 @@
 
     private void AddPerson()
     {
-        if (SelectedPerson != null && !Model.PersonExpenses.Any(p => p.Person.PersonId == SelectedPerson.PersonId))
+        if (SelectedPerson != null && !Model.PersonExpenses.Any(p => p.PersonId == SelectedPerson.PersonId))
         {
-            Model.PersonExpenses.Add(new PersonExpense { PersonId = SelectedPerson.PersonId, Person = SelectedPerson, Percentage = SelectedPercentage });
+            Model.PersonExpenses.Add(new PersonExpenseModel { PersonId = SelectedPerson.PersonId, PersonName = SelectedPerson.Name, Percentage = SelectedPercentage });
             SelectedPerson = null;
         }
     }
 
-    private void RemovePerson(PersonExpense personExpense)
+    private void RemovePerson(PersonExpenseModel personExpense)
     {
         Model.PersonExpenses.Remove(personExpense);
     }
 
     private async Task Save()
     {
+        if (SelectedCategory != null)
+        {
+            Model.CategoryId = SelectedCategory.CategoryId;
+        }
+
         var result = await Mediator.Send(Model);
 
-        if(result != default(int))
+        if (result != default(int))
         {
             MudDialog.Close(DialogResult.Ok(true));
         }

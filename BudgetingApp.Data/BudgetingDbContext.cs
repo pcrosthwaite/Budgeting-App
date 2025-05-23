@@ -30,8 +30,12 @@ namespace BudgetingApp.Data
         }
 
         public DbSet<Expense> Expenses { get; set; }
+        public DbSet<Income> Income { get; set; }
         public DbSet<Person> Persons { get; set; }
         public DbSet<PersonExpense> PersonExpenses { get; set; }
+        public DbSet<Category> Categories { get; set; }
+        public DbSet<ExpenseCategory> ExpenseCategories { get; set; }
+        public DbSet<IncomeCategory> IncomeCategories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -39,7 +43,9 @@ namespace BudgetingApp.Data
 
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.ApplyConfiguration(new CategoryCfg());
             modelBuilder.ApplyConfiguration(new ExpenseCfg());
+            modelBuilder.ApplyConfiguration(new IncomeCfg());
             modelBuilder.ApplyConfiguration(new PersonCfg());
             modelBuilder.ApplyConfiguration(new PersonExpenseCfg());
         }

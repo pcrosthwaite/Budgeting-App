@@ -8,8 +8,7 @@ namespace BudgetingApp.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<PersonExpense> builder)
         {
-            // Configure many-to-many relationship
-            builder.HasKey(pe => new { pe.PersonId, pe.ExpenseId });
+            builder.HasIndex(pe => new { pe.PersonId, pe.ExpenseId });
 
             builder
                 .HasOne(pe => pe.Person)

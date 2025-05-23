@@ -1,0 +1,43 @@
+@using BudgetingApp.Data.Models
+@using MudBlazor
+@inject IMediator Mediator
+
+<MudContainer MaxWidth="MaxWidth.Medium">
+    <MudTextField @bind-Value="Model.Name" Label="Name" Variant="Variant.Filled" FullWidth="true" />
+    <MudColorPicker @bind-Text="Model.HexColourCode" Label="Colour" ColorPickerView="ColorPickerView.Grid" />
+    <MudSelect @bind-Value="Model.CategoryType" Label="Type" Variant="Variant.Outlined" FullWidth="true">
+        @foreach (var itm in Enum.GetValues(typeof(CategoryType)).Cast<CategoryType>())
+        {
+            <MudSelectItem Value="itm">@itm</MudSelectItem>
+        }
+    </MudSelect>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Save">Save</MudButton>
+    <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="Cancel">Cancel</MudButton>
+</MudContainer>
+
+@code {
+    [CascadingParameter]
+    IMudDialogInstance MudDialog { get; set; } = default!;
+
+    [Parameter]
+    public int? CategoryId { get; set; }
+
+    private SaveCommand Model { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Model = await Mediator.Send(new SaveQuery { CategoryId = CategoryId });
+    }
+
+    private async Task Save()
+    {
+        await Mediator.Send(Model);
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}
