@@ -34,8 +34,6 @@ namespace BudgetingApp.Data
         public DbSet<Person> Persons { get; set; }
         public DbSet<PersonExpense> PersonExpenses { get; set; }
         public DbSet<Category> Categories { get; set; }
-        public DbSet<ExpenseCategory> ExpenseCategories { get; set; }
-        public DbSet<IncomeCategory> IncomeCategories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

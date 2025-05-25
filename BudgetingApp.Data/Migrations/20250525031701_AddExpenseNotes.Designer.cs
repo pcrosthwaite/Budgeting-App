@@ -2,6 +2,7 @@
 using BudgetingApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -9,9 +10,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BudgetingApp.Data.Migrations
 {
     [DbContext(typeof(BudgetingDbContext))]
-    partial class BudgetingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250525031701_AddExpenseNotes")]
+    partial class AddExpenseNotes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.5");
@@ -36,7 +39,7 @@ namespace BudgetingApp.Data.Migrations
 
                     b.HasKey("CategoryId");
 
-                    b.ToTable("Categories", (string)null);
+                    b.ToTable("Categories");
                 });
 
             modelBuilder.Entity("BudgetingApp.Data.Models.Expense", b =>
@@ -71,7 +74,7 @@ namespace BudgetingApp.Data.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Expenses", (string)null);
+                    b.ToTable("Expenses");
                 });
 
             modelBuilder.Entity("BudgetingApp.Data.Models.Income", b =>
@@ -99,7 +102,7 @@ namespace BudgetingApp.Data.Migrations
                     b.HasIndex("PersonId")
                         .IsUnique();
 
-                    b.ToTable("Income", (string)null);
+                    b.ToTable("Income");
                 });
 
             modelBuilder.Entity("BudgetingApp.Data.Models.Person", b =>
@@ -123,7 +126,7 @@ namespace BudgetingApp.Data.Migrations
                     b.HasIndex("IsDeleted")
                         .HasFilter("IsDeleted = 0");
 
-                    b.ToTable("Persons", (string)null);
+                    b.ToTable("Persons");
                 });
 
             modelBuilder.Entity("BudgetingApp.Data.Models.PersonExpense", b =>
@@ -147,7 +150,7 @@ namespace BudgetingApp.Data.Migrations
 
                     b.HasIndex("PersonId", "ExpenseId");
 
-                    b.ToTable("PersonExpenses", (string)null);
+                    b.ToTable("PersonExpenses");
                 });
 
             modelBuilder.Entity("BudgetingApp.Data.Models.Expense", b =>

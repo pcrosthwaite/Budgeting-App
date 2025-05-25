@@ -6,14 +6,16 @@
 @inject IDialogService DialogService
 
 <MudContainer>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => OpenEditDialog(null)">Add Person</MudButton>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => OpenEditDialog(null)">Add Category</MudButton>
 
     <MudTable Items="@Model.Data" Hover="true" Bordered="true" Striped="true">
         <HeaderContent>
             <MudTh>Name</MudTh>
+            <MudTh>Colour</MudTh>
             <MudTh>Actions</MudTh>
         </HeaderContent>
         <RowTemplate>
+            <MudTd DataLabel="Type">@context.CategoryType.GetDescription()</MudTd>
             <MudTd DataLabel="Name">@context.Name</MudTd>
             <MudTd DataLabel="Colour">
                 @if (context.HexColourCode.HasValue())

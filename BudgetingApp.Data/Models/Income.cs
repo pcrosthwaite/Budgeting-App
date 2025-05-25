@@ -9,6 +9,6 @@
         public decimal Amount { get; set; }
         public TransactionFrequency Frequency { get; set; }
         public int CategoryId { get; set; }
-        public IncomeCategory IncomeCategory { get; set; }
+        public Category Category { get; set; }
     }
 }

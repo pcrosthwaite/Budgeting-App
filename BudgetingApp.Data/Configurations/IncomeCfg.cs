@@ -14,8 +14,8 @@ namespace BudgetingApp.Data.Configurations
                 .OnDelete(DeleteBehavior.NoAction);
 
             builder
-                .HasOne(x => x.IncomeCategory)
-                .WithMany(x => x.Income)
+                .HasOne(x => x.Category)
+                .WithMany()
                 .HasForeignKey(x => x.CategoryId)
                 .OnDelete(DeleteBehavior.NoAction);
         }

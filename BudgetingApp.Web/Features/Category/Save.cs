@@ -54,7 +54,7 @@ namespace BudgetingApp.Web.Features.Category
         public string Name { get; set; }
         public string HexColourCode { get; set; }
 
-        public CategoryType CategoryType { get; set; }
+        public CategoryType CategoryType { get; set; } = CategoryType.Expense;
     }
 
     public class SavePersonCommandHandler : IRequestHandler<SaveCommand, int>

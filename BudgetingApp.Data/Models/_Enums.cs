@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
 
 namespace BudgetingApp.Data.Models
 {
@@ -13,6 +9,11 @@ namespace BudgetingApp.Data.Models
         Monthly,
         Quarterly, // Every 3 months
         Yearly, // Every year
-        SemiAnnually
+
+        [Description("Semi-Annually")]
+        SemiAnnually,
+
+        [Description("Five-Yearly")]
+        FiveYearly
     }
 }

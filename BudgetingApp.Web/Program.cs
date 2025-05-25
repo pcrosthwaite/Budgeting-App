@@ -1,3 +1,4 @@
+using ApexCharts;
 using BudgetingApp.Data;
 using BudgetingApp.Data.Services;
 using MediatR;
@@ -30,8 +31,17 @@ assemblies.Add(typeof(Program).Assembly);
 
 services.AddMapperly(assemblies.ToArray());
 
+services.AddApexCharts(e =>
+{
+    e.GlobalOptions = new ApexChartBaseOptions
+    {
+        Debug = true,
+        Theme = new Theme { Palette = PaletteType.Palette6 }
+    };
+});
+
 // Register MediatR
-builder.Services.AddMediatR(typeof(Program).Assembly);
+services.AddMediatR(typeof(Program).Assembly);
 
 var app = builder.Build();
 

@@ -51,6 +51,7 @@ namespace BudgetingApp.Web.Features.Expenses
             }
 
             command.Persons = await _personService.GetAllAsync(cancellationToken);
+            command.ExpenseCategories = await _expenseService.GetExpenseCategories(cancellationToken);
 
             return command;
         }
@@ -66,15 +67,16 @@ namespace BudgetingApp.Web.Features.Expenses
         public decimal Cost { get; set; }
         public TransactionFrequency Frequency { get; set; }
         public bool IncludeInBillsAccount { get; set; }
+        public bool IsSubscription { get; set; }
 
         public int? CategoryId { get; set; } // Add category ID to the SaveCommand
-        public ExpenseCategory ExpenseCategory { get; set; }
+        public Data.Models.Category ExpenseCategory { get; set; }
 
         // Navigation property for the many-to-many relationship
         public List<PersonExpenseModel> PersonExpenses { get; set; } = new();
 
         public List<Person> Persons { get; set; }
-        public List<ExpenseCategory> ExpenseCategories { get; set; }
+        public List<Data.Models.Category> ExpenseCategories { get; set; }
         public decimal FortnightlyCost { get; set; }
     }
 

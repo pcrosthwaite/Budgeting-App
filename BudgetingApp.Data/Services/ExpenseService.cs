@@ -17,6 +17,7 @@ namespace BudgetingApp.Data.Services
         public async Task<ICollection<Expense>> GetExpensesAsync()
         {
             return await _context.Expenses
+                            .Include(x => x.Category)
                             .Include(e => e.PersonExpenses)
                                 .ThenInclude(pe => pe.Person)
                             .ToListAsync();
@@ -27,7 +28,7 @@ namespace BudgetingApp.Data.Services
             if (!expenseId.HasValue) return null;
 
             return await _context.Expenses
-                            .Include(e => e.ExpenseCategory)
+                            .Include(e => e.Category)
                             //.Include(e => e.PersonExpenses)
                             //    .ThenInclude(pe => pe.Person)
                             .FirstOrDefaultAsync(e => e.ExpenseId == expenseId.Value);
@@ -99,6 +100,27 @@ namespace BudgetingApp.Data.Services
             await _context.SaveChangesAsync();
 
             return true;
+        }
+
+        public async Task<List<Category>> GetExpenseCategories(CancellationToken cancellationToken)
+        {
+            var result = await GetCategories(CategoryType.Expense, cancellationToken);
+
+            return result;
+        }
+
+        public async Task<List<Category>> GetIncomeCategories(CancellationToken cancellationToken)
+        {
+            var result = await GetCategories(CategoryType.Income, cancellationToken);
+
+            return result;
+        }
+
+        private async Task<List<Category>> GetCategories(CategoryType type, CancellationToken cancellationToken)
+        {
+            var result = await _context.Categories.Where(x => x.CategoryType == type).ToListAsync();
+
+            return result;
         }
     }
 }

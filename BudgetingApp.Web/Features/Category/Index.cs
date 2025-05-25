@@ -1,4 +1,5 @@
 using BudgetingApp.Data;
+using BudgetingApp.Data.Models;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,6 +16,7 @@ namespace BudgetingApp.Web.Features.Category
     public class IndexModel
     {
         public int CategoryId { get; set; }
+        public CategoryType CategoryType { get; set; }
         public string Name { get; set; }
         public string HexColourCode { get; set; }
         public string HexColourCodeStyle => HexColourCode.HasValue() ? $"background-color: {HexColourCode}; border-color: {HexColourCode};" : "";

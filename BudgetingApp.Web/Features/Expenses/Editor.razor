@@ -16,7 +16,8 @@
                 }
             </MudSelect>
             <MudCheckBox @bind-Value="Model.IncludeInBillsAccount" Label="Include in Bills Transfer" />
-            <MudSelect T="ExpenseCategory" @bind-Value="SelectedCategory" Label="Category" Variant="Variant.Outlined" FullWidth="true">
+            <MudCheckBox @bind-Value="Model.IsSubscription" Label="Subscription" />
+            <MudSelect T="Data.Models.Category" @bind-Value="SelectedCategory" Label="Category" Variant="Variant.Outlined" FullWidth="true">
                 @foreach (var category in Model.ExpenseCategories)
                 {
                     <MudSelectItem Value="category">@category.Name</MudSelectItem>
@@ -52,7 +53,7 @@
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="Name">@context.PersonName</MudTd>
-                    <MudTd DataLabel="Percent">@context.Percentage</MudTd>
+                    <MudTd DataLabel="Percent">@context.Percentage.ToString("P2")</MudTd>
                     <MudTd DataLabel="Actions">
                         <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="() => RemovePerson(context)">Remove</MudButton>
                     </MudTd>
@@ -75,7 +76,7 @@
     private Person SelectedPerson { get; set; } = new();
     private string SearchText { get; set; } = string.Empty;
     private double SelectedPercentage { get; set; } = 0.0;
-    private ExpenseCategory SelectedCategory { get; set; }
+    private Data.Models.Category SelectedCategory { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -83,7 +84,9 @@
         Model = await Mediator.Send(new SaveQuery { ExpenseId = ExpenseId });
 
         // Set the selected category if it exists
-        SelectedCategory = Model.ExpenseCategories.FirstOrDefault(c => c.CategoryId == Model.CategoryId);
+        if(Model.CategoryId.HasValue) {
+            SelectedCategory = Model.ExpenseCategories.FirstOrDefault(c => c.CategoryId == Model.CategoryId);
+        }
     }
 
     private async Task<IEnumerable<Person>> SearchPersonsAsync(string value, CancellationToken ct)
@@ -121,7 +124,7 @@
     {
         if (SelectedPerson != null && !Model.PersonExpenses.Any(p => p.PersonId == SelectedPerson.PersonId))
         {
-            Model.PersonExpenses.Add(new PersonExpenseModel { PersonId = SelectedPerson.PersonId, PersonName = SelectedPerson.Name, Percentage = SelectedPercentage });
+            Model.PersonExpenses.Add(new PersonExpenseModel { PersonId = SelectedPerson.PersonId, PersonName = SelectedPerson.Name, Percentage = SelectedPercentage / 100 });
             SelectedPerson = null;
         }
     }
