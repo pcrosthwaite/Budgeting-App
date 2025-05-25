@@ -95,16 +95,29 @@
                             </Columns>
                         </MudDataGrid>
                     </MudItem>
-                    <MudItem xs="12">
+                    <MudItem xs="6">
                         <h3>Fortnightly Overview</h3>
-                        <ApexChart TItem="CategoryData"
-                                   Options="Model.BillOverviewChartOptions"
+                        <ApexChart TItem="ChartData"
+                                   Options="Model.BillChartOptions"
                                    Width="500" Height="400">
-                            <ApexPointSeries TItem="CategoryData"
+                            <ApexPointSeries TItem="ChartData"
                                              Items="Model.BillOverviewData"
                                              Name="By Category"
                                              SeriesType="SeriesType.Pie"
-                                             XValue="x => x.CategoryName"
+                                             XValue="x => x.Name"
+                                             YValue="x => x.Total" />
+                        </ApexChart>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <h3>Subscription Overview</h3>
+                        <ApexChart TItem="ChartData"
+                                   Options="Model.SubscriptionChartOptions"
+                                   Width="500" Height="400">
+                            <ApexPointSeries TItem="ChartData"
+                                             Items="Model.SubscriptionOverviewData"
+                                             Name="By Subscription"
+                                             SeriesType="SeriesType.Pie"
+                                             XValue="x => x.Name"
                                              YValue="x => x.Total" />
                         </ApexChart>
                     </MudItem>

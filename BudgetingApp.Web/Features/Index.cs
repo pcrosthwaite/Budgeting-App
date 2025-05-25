@@ -16,10 +16,11 @@ namespace BudgetingApp.Web.Features
         public List<PersonModel> TotalPersons { get; set; } = new();
 
         public List<BillTransferModel> BillTransferOverview { get; set; }
-        public ApexChartOptions<CategoryData> BillOverviewChartOptions { get; internal set; }
+        public ApexChartOptions<ChartData> BillChartOptions { get; set; }
+        public ApexChartOptions<ChartData> SubscriptionChartOptions { get; set; }
 
-        //public string[] BillOverviewLabels = Array.Empty<string>(); // new();
-        public List<CategoryData> BillOverviewData = new(); // Array.Empty<double>(); //new();
+        public List<ChartData> BillOverviewData = new();
+        public List<ChartData> SubscriptionOverviewData = new();
     }
 
     /// <summary>
@@ -116,10 +117,14 @@ namespace BudgetingApp.Web.Features
 
             //request.BillOverviewData = request.Expenses.GroupBy(e => e.CategoryName).Select(g => (double)g.Sum(e => e.Cost)).ToArray();
 
-            var chartData = request.Expenses.GroupBy(e => e.CategoryName).Select(g => new CategoryData { CategoryName = g.Key, Total = g.Sum(e => e.FortnightlyCost) }).ToList();
-            request.BillOverviewData = chartData;
-            request.BillOverviewChartOptions = new ApexChartOptions<CategoryData>
+            var billDataOverview = request.Expenses.GroupBy(e => e.CategoryName).Select(g => new ChartData { Name = g.Key, Total = g.Sum(e => e.FortnightlyCost) }).ToList();
+            var subscriptionOverview = request.Subscriptions.GroupBy(e => e.Name).Select(g => new ChartData { Name = g.Key, Total = g.Sum(e => e.FortnightlyCost) }).ToList();
+            request.BillOverviewData = billDataOverview;
+            request.SubscriptionOverviewData = subscriptionOverview;
+
+            request.BillChartOptions = new ApexChartOptions<ChartData>
             {
+                Chart = new Chart { Id = "bill-chart" },
                 Tooltip = new Tooltip
                 {
                     Y = new TooltipY
@@ -136,13 +141,19 @@ namespace BudgetingApp.Web.Features
                 }
             };
 
+            request.SubscriptionChartOptions = new ApexChartOptions<ChartData>
+            {
+                Chart = new Chart { Id = "subs-chart" },
+                Tooltip = request.BillChartOptions.Tooltip
+            };
+
             return request;
         }
     }
 
-    public class CategoryData
+    public class ChartData
     {
-        public string CategoryName { get; set; } = "";
+        public string Name { get; set; } = "";
         public decimal Total { get; set; }
     }
 }
