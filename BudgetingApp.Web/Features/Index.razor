@@ -48,10 +48,30 @@
                 </MudDataGrid>
             </MudItem>
             <MudItem xs="6">
-                @{
-                    
-                }
                 <MudGrid>
+                    <MudItem xs="12">
+                        <h3>Overview</h3>
+                        <MudTable Items="@Model.PersonOverview" Hover="true" Bordered="true" Striped="true">
+                            <HeaderContent>
+                                <MudTh>Person</MudTh>
+                                <MudTh>Total Fortnightly</MudTh>
+                                <MudTh>Total Outgoings</MudTh>
+                                <MudTh>Remaining</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd>@context.PersonName</MudTd>
+                                <MudTd>
+                                    @context.Income.ToString("C2", CultureInfo.GetCultureInfo("en-AU"))
+                                </MudTd>
+                                <MudTd>
+                                    @context.OutgoingDisplay
+                                </MudTd>
+                                <MudTd>
+                                    @context.Remaining?.ToString("C2", CultureInfo.GetCultureInfo("en-AU"))
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </MudItem>
                     <MudItem xs="12">
                         <h3>Bills Account Transfers</h3>
                         <MudTable Items="@Model.BillTransferOverview" Hover="true" Bordered="true" Striped="true">

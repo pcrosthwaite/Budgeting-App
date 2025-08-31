@@ -1,8 +1,11 @@
 ﻿using ApexCharts;
+using BudgetingApp.Data;
 using BudgetingApp.Data.Models;
 using BudgetingApp.Data.Services;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using MudBlazor;
+using System.Globalization;
 
 namespace BudgetingApp.Web.Features
 {
@@ -16,6 +19,7 @@ namespace BudgetingApp.Web.Features
         public List<PersonModel> TotalPersons { get; set; } = new();
 
         public List<BillTransferModel> BillTransferOverview { get; set; }
+        public List<PersonOverviewModel> PersonOverview { get; set; } = new();
         public ApexChartOptions<ChartData> BillChartOptions { get; set; }
         public ApexChartOptions<ChartData> SubscriptionChartOptions { get; set; }
 
@@ -69,14 +73,27 @@ namespace BudgetingApp.Web.Features
         public decimal Share { get; set; }
     }
 
+    public class PersonOverviewModel
+    {
+        public int PersonId { get; set; }
+        public string PersonName { get; set; }
+        public decimal Income { get; set; }
+        public decimal TotalOutgoings { get; set; }
+        public decimal OutgoingPercent => Income > 0 ? (TotalOutgoings / Income) * 100 : 0;
+        public string OutgoingDisplay => $"{TotalOutgoings.ToString("C2", CultureInfo.GetCultureInfo("en-AU"))} ({Math.Round(OutgoingPercent, 2)}%)";
+        public decimal? Remaining => Income > 0 && Income > TotalOutgoings ? Income - TotalOutgoings : null;
+    }
+
     public class IndexQueryHandler : IRequestHandler<IndexQuery, IndexQuery>
     {
         private readonly ExpenseService _expenseService;
         private readonly IMapperService _mapper;
+        private readonly BudgetingDbContext _context;
 
-        public IndexQueryHandler(ExpenseService expenseService, IMapperService mapper)
+        public IndexQueryHandler(ExpenseService expenseService, IMapperService mapper, BudgetingDbContext context)
         {
             _expenseService = expenseService;
+            _context = context;
             _mapper = mapper;
         }
 
@@ -109,6 +126,27 @@ namespace BudgetingApp.Web.Features
 
             request.BillTransferOverview = billTotals;
 
+            var incomes = await _context.Income
+                                    .Include(x => x.Person)
+                                    .ToListAsync(cancellationToken);
+
+            var totalOutgoingsByPerson = request.Expenses
+                                        .SelectMany(e => e.PersonExpenses.Select(pe => new { pe.PersonId, Share = e.FortnightlyCost * (decimal)pe.Percentage }))
+                                        .GroupBy(x => x.PersonId)
+                                        .ToDictionary(g => g.Key, g => g.Sum(x => x.Share));
+
+            foreach (var income in incomes)
+            {
+                var personOverview = new PersonOverviewModel()
+                {
+                    PersonId = income.PersonId ?? 0,
+                    PersonName = income.Person?.Name ?? "Unknown",
+                    Income = income.Amount,
+                    TotalOutgoings = totalOutgoingsByPerson.TryGetValue(income.PersonId ?? 0, out var totalOutgoings) ? totalOutgoings : 0
+                };
+
+                request.PersonOverview.Add(personOverview);
+            }
             // 1) Group by category and sum cost (swap to FortnightlyCost if you prefer)
             var totals = request.Expenses.GroupBy(e => e.CategoryName).Select(g => new { Category = g.Key, Sum = g.Sum(e => e.Cost) }).ToList();
 
