@@ -2,6 +2,13 @@
 
 namespace BudgetingApp.Data.Models
 {
+    public enum PaymentFrequency
+    {
+        Weekly,
+        Fortnightly,
+        Monthly,
+    }
+
     public enum TransactionFrequency
     {
         Weekly,

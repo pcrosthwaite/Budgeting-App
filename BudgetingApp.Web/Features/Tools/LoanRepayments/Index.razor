@@ -1,0 +1,155 @@
+﻿@page "/tools/loan-repayments"
+@using System.Globalization
+@using BudgetingApp.Web.Shared
+@using MediatR
+@using MudBlazor
+@inject ISender Mediator
+
+<MudPaper Class="pa-4">
+
+    <MudText Typo="Typo.h5">Loan Repayments</MudText>
+
+    <MudForm @ref="_form" Class="mt-4">
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6" md="3">
+                <MudNumericField @bind-Value="_amount"
+                                 Label="Amount"
+                                 Variant="Variant.Outlined"
+                                 Adornment="Adornment.Start"
+                                 AdornmentText="$"
+                                 Min="0"
+                                 Required="true" />
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="3">
+                <MudDatePicker @bind-Date="_startDate"
+                               Label="Start date"
+                               Variant="Variant.Outlined"
+                               Required="true" />
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="3">
+                <MudDatePicker @bind-Date="_targetDate"
+                               Label="Target date"
+                               Variant="Variant.Outlined"
+                               Required="true" />
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="PaymentFrequency"
+                           Label="Payment frequency"
+                           Variant="Variant.Outlined"
+                           @bind-Value="_frequency">
+                    <MudSelectItem Value="PaymentFrequency.Fortnightly">Fortnightly</MudSelectItem>
+                    <MudSelectItem Value="PaymentFrequency.Weekly">Weekly</MudSelectItem>
+                    <MudSelectItem Value="PaymentFrequency.Monthly">Monthly</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           OnClick="CalcAsync"
+                           Disabled="_isBusy">
+                    Calculate
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudForm>
+
+    @if (_model?.Alerts?.Any() == true)
+    {
+        <div class="mt-4">
+            @foreach (var alert in _model.Alerts)
+            {
+                <MudAlert Severity="@alert.Severity" Dense="true" Class="mb-2">
+                    @alert.Message
+                </MudAlert>
+            }
+        </div>
+    }
+
+    @if (_model?.Rows?.Any() == true)
+    {
+        <MudDivider Class="my-4" />
+
+        <MudText Typo="Typo.subtitle1">
+            Payments: @_model.Rows.Count |
+            Each: @_model.SuggestedRegularPayment.ToString("C2", CultureInfo.GetCultureInfo("en-AU"))
+        </MudText>
+
+        <MudDataGrid Items="_model.Rows"
+                     Dense="true"
+                     Hover="true"
+                     Striped="true"
+                     Class="mt-3">
+            <Columns>
+                <PropertyColumn Property="x => x.PaymentNumber" Title="#" />
+                <PropertyColumn Property="x => x.PaymentDate" Title="Date" Format="dd/MM/yyyy" />
+                <PropertyColumn Property="x => x.BalanceBefore" Title="Starting amount"
+                                Format="C2" Culture="@CultureInfo.GetCultureInfo("en-AU")" />
+                <PropertyColumn Property="x => x.PaymentAmount" Title="Payment"
+                                Format="C2" Culture="@CultureInfo.GetCultureInfo("en-AU")" />
+                <PropertyColumn Property="x => x.BalanceAfter" Title="After payment"
+                                Format="C2" Culture="@CultureInfo.GetCultureInfo("en-AU")" />
+            </Columns>
+        </MudDataGrid>
+    }
+</MudPaper>
+
+@code {
+    private MudForm? _form;
+
+    private decimal _amount;
+    private DateTime? _startDate = DateTime.Today;
+    private DateTime? _targetDate;
+    private PaymentFrequency _frequency = PaymentFrequency.Fortnightly;
+
+    private bool _isBusy;
+    private IndexModel _model;
+
+    private async Task CalcAsync()
+    {
+        _model = null;
+
+        if (_form is null)
+        {
+            return;
+        }
+
+        await _form.Validate();
+
+        if (!_form.IsValid)
+        {
+            _model = new IndexModel();
+            _model.Alerts.Add(new AlertModel { Severity = Severity.Error, Message = "Please fix the validation errors and try again." });
+            return;
+        }
+
+        if (_startDate is null || _targetDate is null)
+        {
+            _model = new IndexModel();
+            _model.Alerts.Add(new AlertModel { Severity = Severity.Error, Message = "Start date and target date are required." });
+            return;
+        }
+
+        _isBusy = true;
+
+        try
+        {
+            _model = await Mediator.Send(new IndexQuery
+            {
+                Amount = _amount,
+                StartDate = _startDate.Value.Date,
+                TargetDate = _targetDate.Value.Date,
+                Frequency = _frequency
+            });
+        }
+        finally
+        {
+            _isBusy = false;
+        }
+    }
+
+}
