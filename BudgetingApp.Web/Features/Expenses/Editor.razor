@@ -15,23 +15,29 @@
                     <MudSelectItem Value="itm">@itm</MudSelectItem>
                 }
             </MudSelect>
-            <MudCheckBox @bind-Value="Model.IncludeInBillsAccount" Label="Include in Bills Transfer" />
-            <MudCheckBox @bind-Value="Model.IsSubscription" Label="Subscription" />
             <MudSelect T="Data.Models.Category" @bind-Value="SelectedCategory" Label="Category" Variant="Variant.Outlined" FullWidth="true">
                 @foreach (var category in Model.ExpenseCategories)
                 {
                     <MudSelectItem Value="category">@category.Name</MudSelectItem>
                 }
             </MudSelect>
+            <MudSelect @bind-Value="SelectedBankAccount" Label="Bank Account" Variant="Variant.Outlined" FullWidth="true" Clearable>
+                @foreach (var itm in Model.BankAccounts)
+                {
+                    <MudSelectItem Value="itm">@itm.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudCheckBox @bind-Value="Model.IncludeInBillsAccount" Label="Include in Bills Transfer" />
+            <MudCheckBox @bind-Value="Model.IsSubscription" Label="Subscription" />
         </MudItem>
 
         <MudItem xs="12" md="6">
             <MudGrid Spacing="0">
-                <MudItem xs="12" >
+                <MudItem xs="12">
                     <MudAutocomplete T="Person" @bind-Value="SelectedPerson" Label="Add Responsible Person" Variant="Variant.Outlined" FullWidth="true"
                                      ToStringFunc="@(p => p != null ? p.Name : null)" SearchFunc="SearchPersonsAsync">
                         <NoItemsTemplate>
-                            @if(SearchText.HasValue())
+                            @if (SearchText.HasValue())
                             {
                                 <MudButton Variant="Variant.Text" Class="mud-p-2" OnClick="AddNewPerson" FullWidth>Add "@SearchText"</MudButton>
                             }
@@ -77,6 +83,7 @@
     private string SearchText { get; set; } = string.Empty;
     private double SelectedPercentage { get; set; } = 0.0;
     private Data.Models.Category SelectedCategory { get; set; }
+    private BankAccount SelectedBankAccount { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -84,8 +91,14 @@
         Model = await Mediator.Send(new SaveQuery { ExpenseId = ExpenseId });
 
         // Set the selected category if it exists
-        if(Model.CategoryId.HasValue) {
+        if (Model.CategoryId.HasValue)
+        {
             SelectedCategory = Model.ExpenseCategories.FirstOrDefault(c => c.CategoryId == Model.CategoryId);
+        }
+
+        if (Model.BankAccountId.HasValue)
+        {
+            SelectedBankAccount = Model.BankAccounts.FirstOrDefault(x => x.BankAccountId == Model.BankAccountId);
         }
     }
 
@@ -108,7 +121,6 @@
             .Where(p => p.Name.Contains(value, StringComparison.OrdinalIgnoreCase))
             .ToList();
     }
-
 
     private void AddNewPerson()
     {
@@ -136,10 +148,8 @@
 
     private async Task Save()
     {
-        if (SelectedCategory != null)
-        {
-            Model.CategoryId = SelectedCategory.CategoryId;
-        }
+        Model.CategoryId = SelectedCategory?.CategoryId;
+        Model.BankAccountId = SelectedBankAccount?.BankAccountId;
 
         var result = await Mediator.Send(Model);
 

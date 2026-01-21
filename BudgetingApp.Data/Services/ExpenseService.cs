@@ -18,6 +18,7 @@ namespace BudgetingApp.Data.Services
         {
             return await _context.Expenses
                             .Include(x => x.Category)
+                            .Include(x => x.BankAccount)
                             .Include(e => e.PersonExpenses)
                                 .ThenInclude(pe => pe.Person)
                             .ToListAsync();

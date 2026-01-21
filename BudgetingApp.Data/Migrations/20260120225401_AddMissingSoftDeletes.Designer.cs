@@ -2,6 +2,7 @@
 using BudgetingApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -9,9 +10,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BudgetingApp.Data.Migrations
 {
     [DbContext(typeof(BudgetingDbContext))]
-    partial class BudgetingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260120225401_AddMissingSoftDeletes")]
+    partial class AddMissingSoftDeletes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.5");
@@ -54,11 +57,6 @@ namespace BudgetingApp.Data.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
 
                     b.HasKey("BankAccountId");
 
@@ -105,9 +103,6 @@ namespace BudgetingApp.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("BankAccountId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int?>("CategoryId")
                         .HasColumnType("INTEGER");
 
@@ -134,8 +129,6 @@ namespace BudgetingApp.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("ExpenseId");
-
-                    b.HasIndex("BankAccountId");
 
                     b.HasIndex("CategoryId");
 
@@ -232,7 +225,7 @@ namespace BudgetingApp.Data.Migrations
                     b.HasOne("BudgetingApp.Data.Models.Bank", "Bank")
                         .WithMany()
                         .HasForeignKey("BankId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Bank");
@@ -240,17 +233,10 @@ namespace BudgetingApp.Data.Migrations
 
             modelBuilder.Entity("BudgetingApp.Data.Models.Expense", b =>
                 {
-                    b.HasOne("BudgetingApp.Data.Models.BankAccount", "BankAccount")
-                        .WithMany()
-                        .HasForeignKey("BankAccountId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
                     b.HasOne("BudgetingApp.Data.Models.Category", "Category")
                         .WithMany()
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.NoAction);
-
-                    b.Navigation("BankAccount");
 
                     b.Navigation("Category");
                 });

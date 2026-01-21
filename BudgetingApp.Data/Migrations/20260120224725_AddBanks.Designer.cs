@@ -2,6 +2,7 @@
 using BudgetingApp.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -9,9 +10,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BudgetingApp.Data.Migrations
 {
     [DbContext(typeof(BudgetingDbContext))]
-    partial class BudgetingDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260120224725_AddBanks")]
+    partial class AddBanks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.5");
@@ -38,38 +41,6 @@ namespace BudgetingApp.Data.Migrations
                     b.ToTable("Banks");
                 });
 
-            modelBuilder.Entity("BudgetingApp.Data.Models.BankAccount", b =>
-                {
-                    b.Property<int>("BankAccountId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("AccountNumber")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("BankId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("BankAccountId");
-
-                    b.HasIndex("BankId");
-
-                    b.HasIndex("IsDeleted")
-                        .HasFilter("IsDeleted = 0");
-
-                    b.ToTable("BankAccounts");
-                });
-
             modelBuilder.Entity("BudgetingApp.Data.Models.Category", b =>
                 {
                     b.Property<int>("CategoryId")
@@ -83,18 +54,12 @@ namespace BudgetingApp.Data.Migrations
                         .HasMaxLength(7)
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("TEXT");
 
                     b.HasKey("CategoryId");
-
-                    b.HasIndex("IsDeleted")
-                        .HasFilter("IsDeleted = 0");
 
                     b.ToTable("Categories");
                 });
@@ -103,9 +68,6 @@ namespace BudgetingApp.Data.Migrations
                 {
                     b.Property<int>("ExpenseId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("BankAccountId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int?>("CategoryId")
@@ -120,9 +82,6 @@ namespace BudgetingApp.Data.Migrations
                     b.Property<bool>("IncludeInBillsAccount")
                         .HasColumnType("INTEGER");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
-
                     b.Property<bool>("IsSubscription")
                         .HasColumnType("INTEGER");
 
@@ -135,12 +94,7 @@ namespace BudgetingApp.Data.Migrations
 
                     b.HasKey("ExpenseId");
 
-                    b.HasIndex("BankAccountId");
-
                     b.HasIndex("CategoryId");
-
-                    b.HasIndex("IsDeleted")
-                        .HasFilter("IsDeleted = 0");
 
                     b.ToTable("Expenses");
                 });
@@ -160,18 +114,12 @@ namespace BudgetingApp.Data.Migrations
                     b.Property<int>("Frequency")
                         .HasColumnType("INTEGER");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int?>("PersonId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("IncomeId");
 
                     b.HasIndex("CategoryId");
-
-                    b.HasIndex("IsDeleted")
-                        .HasFilter("IsDeleted = 0");
 
                     b.HasIndex("PersonId")
                         .IsUnique();
@@ -227,30 +175,12 @@ namespace BudgetingApp.Data.Migrations
                     b.ToTable("PersonExpenses");
                 });
 
-            modelBuilder.Entity("BudgetingApp.Data.Models.BankAccount", b =>
-                {
-                    b.HasOne("BudgetingApp.Data.Models.Bank", "Bank")
-                        .WithMany()
-                        .HasForeignKey("BankId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("Bank");
-                });
-
             modelBuilder.Entity("BudgetingApp.Data.Models.Expense", b =>
                 {
-                    b.HasOne("BudgetingApp.Data.Models.BankAccount", "BankAccount")
-                        .WithMany()
-                        .HasForeignKey("BankAccountId")
-                        .OnDelete(DeleteBehavior.NoAction);
-
                     b.HasOne("BudgetingApp.Data.Models.Category", "Category")
                         .WithMany()
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.NoAction);
-
-                    b.Navigation("BankAccount");
 
                     b.Navigation("Category");
                 });

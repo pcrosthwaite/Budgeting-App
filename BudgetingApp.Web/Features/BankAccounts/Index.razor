@@ -1,0 +1,62 @@
+@page "/bankaccounts"
+@using BudgetingApp.Data.Models
+@using MudBlazor
+@using BudgetingApp.Web.Shared
+@inject IMediator Mediator
+@inject IDialogService DialogService
+
+<MudContainer>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => OpenEditDialog(null)">Add Bank Account</MudButton>
+
+    <MudTable Items="@Model.Data" Hover="true" Bordered="true" Striped="true">
+        <HeaderContent>
+            <MudTh>Name</MudTh>
+            <MudTh>Bank Name</MudTh>
+            <MudTh>Acct Number</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Name">@context.BankName</MudTd>
+            <MudTd DataLabel="Name">@context.AccountNumber</MudTd>
+
+            <MudTd DataLabel="Actions">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => OpenEditDialog(context.BankAccountId)">Edit</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="() => OpenDeleteDialog(context.BankAccountId, context.Name)">Delete</MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private IndexQuery Model { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Model = await Mediator.Send(new IndexQuery());
+    }
+
+    private async Task OpenEditDialog(int? id)
+    {
+        var parameters = new DialogParameters { ["BankAccountId"] = id };
+        var dialog = await DialogService.ShowAsync<Editor>("Edit", parameters);
+        var result = await dialog.Result;
+
+        if (!result?.Canceled ?? true)
+        {
+            await OnInitializedAsync();
+        }
+    }
+
+    private async Task OpenDeleteDialog(int id, string identifier = "this item")
+    {
+        var parameters = new DialogParameters { ["Content"] = $"Are you sure you want to delete this {identifier}?" };
+        var dialog = await DialogService.ShowAsync<Confirm>("Confirm Delete", parameters);
+        var result = await dialog.Result;
+
+        if (!result?.Canceled ?? false)
+        {
+            await Mediator.Send(new DeleteCommand { Id = id });
+            await OnInitializedAsync();
+        }
+    }
+}

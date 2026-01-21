@@ -29,6 +29,8 @@ namespace BudgetingApp.Data
             return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
         }
 
+        public DbSet<Bank> Banks { get; set; }
+        public DbSet<BankAccount> BankAccounts { get; set; }
         public DbSet<Expense> Expenses { get; set; }
         public DbSet<Income> Income { get; set; }
         public DbSet<Person> Persons { get; set; }
@@ -41,6 +43,8 @@ namespace BudgetingApp.Data
 
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.ApplyConfiguration(new BankCfg());
+            modelBuilder.ApplyConfiguration(new BankAccountCfg());
             modelBuilder.ApplyConfiguration(new CategoryCfg());
             modelBuilder.ApplyConfiguration(new ExpenseCfg());
             modelBuilder.ApplyConfiguration(new IncomeCfg());

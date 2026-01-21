@@ -16,6 +16,12 @@ namespace BudgetingApp.Data.Configurations
                 .WithMany()
                 .HasForeignKey(x => x.CategoryId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            builder
+                .HasOne(x => x.BankAccount)
+                .WithMany()
+                .HasForeignKey(x => x.BankAccountId)
+                .OnDelete(DeleteBehavior.NoAction);
         }
     }
 }

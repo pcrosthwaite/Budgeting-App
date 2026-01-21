@@ -6,19 +6,22 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor;
 using System.Globalization;
+using static BudgetingApp.Web.Features.IndexQueryHandler;
 
 namespace BudgetingApp.Web.Features
 {
     public class IndexQuery : IRequest<IndexQuery>
     {
         public List<IndexModel> Expenses { get; set; } = new();
-        public List<IndexModel> BillTransfers => Expenses.Where(e => e.IncludeInBillsAccount).ToList();
+        public List<IndexModel> BillTransfers => Expenses.Where(e => e.BankAccountId != null).ToList();
         public List<IndexModel> Subscriptions => Expenses.Where(e => e.IsSubscription).ToList();
 
         // Lookup dictionary for person shares
         public List<PersonModel> TotalPersons { get; set; } = new();
 
-        public List<BillTransferModel> BillTransferOverview { get; set; }
+        //public List<BillTransferModel> BillTransferOverview { get; set; }
+        public BillTransferPivotModel BillTransferOverview { get; set; }
+
         public List<PersonOverviewModel> PersonOverview { get; set; } = new();
         public ApexChartOptions<ChartData> BillChartOptions { get; set; }
         public ApexChartOptions<ChartData> SubscriptionChartOptions { get; set; }
@@ -38,6 +41,9 @@ namespace BudgetingApp.Web.Features
         public TransactionFrequency Frequency { get; set; }
         public string CategoryName { get; set; }
         public bool IncludeInBillsAccount { get; set; }
+        public int? BankAccountId { get; set; }
+        public BankAccount BankAccount { get; set; }
+        public string BankAccountName => BankAccount?.Name ?? string.Empty;
         public bool IsSubscription { get; set; }
 
         public List<PersonExpenseModel> PersonExpenses { get; set; }
@@ -70,6 +76,13 @@ namespace BudgetingApp.Web.Features
     {
         public int PersonId { get; set; }
         public string PersonName { get; set; }
+        public List<BillTransferAccountModel> Accounts { get; set; } = new();
+    }
+
+    public sealed class BillTransferAccountModel
+    {
+        public int BankAccountId { get; set; }
+        public string BankAccountName { get; set; } = "Unknown";
         public decimal Share { get; set; }
     }
 
@@ -107,24 +120,48 @@ namespace BudgetingApp.Web.Features
 
             request.TotalPersons = totalPeople.ToList();
 
-            var billTotals = request.BillTransfers
-                                .SelectMany(e => e.PersonExpenses.Select(pe => new
-                                {
-                                    pe.PersonId,
-                                    pe.PersonName,
-                                    Share = e.FortnightlyCost * (decimal)pe.Percentage
-                                }))
-                                .GroupBy(x => new { x.PersonId, x.PersonName })
-                                .Select(g => new BillTransferModel()
-                                {
-                                    PersonId = g.Key.PersonId,
-                                    PersonName = g.Key.PersonName,
-                                    Share = g.Sum(x => x.Share)
-                                })
-                                .OrderBy(x => x.PersonName)
-                                .ToList();
+            var bankAccounts = await _context.BankAccounts.ToListAsync(cancellationToken);
+            request.BillTransferOverview = GetTransferOverview(request.BillTransfers, bankAccounts);
 
-            request.BillTransferOverview = billTotals;
+            //var billTotals = request.BillTransfers
+            //                    .Where(e => e.BankAccountId != null)
+            //                    .SelectMany(
+            //                                e => e.PersonExpenses ?? Enumerable.Empty<PersonExpenseModel>(),
+            //                                (e, pe) => new
+            //                                {
+            //                                    pe.PersonId,
+            //                                    pe.PersonName,
+            //                                    BankAccountId = e.BankAccountId!.Value,
+            //                                    BankAccountName = e.BankAccount?.Name ?? "Unknown",
+            //                                    Share = e.FortnightlyCost * (decimal)pe.Percentage
+            //                                })
+            //                    .GroupBy(x => new { x.PersonId, x.PersonName, x.BankAccountId, x.BankAccountName })
+            //                    .Select(g => new
+            //                    {
+            //                        g.Key.PersonId,
+            //                        g.Key.PersonName,
+            //                        g.Key.BankAccountId,
+            //                        g.Key.BankAccountName,
+            //                        Share = g.Sum(x => x.Share)
+            //                    })
+            //                    .GroupBy(x => new { x.PersonId, x.PersonName })
+            //                    .Select(g => new BillTransferModel()
+            //                    {
+            //                        PersonId = g.Key.PersonId,
+            //                        PersonName = g.Key.PersonName,
+            //                        Accounts = g.OrderBy(x => x.BankAccountName)
+            //                                    .Select(x => new BillTransferAccountModel()
+            //                                    {
+            //                                        BankAccountId = x.BankAccountId,
+            //                                        BankAccountName = x.BankAccountName,
+            //                                        Share = x.Share
+            //                                    })
+            //                                    .ToList()
+            //                    })
+            //                    .OrderBy(x => x.PersonName)
+            //                    .ToList();
+
+            //request.BillTransferOverview = billTotals;
 
             var incomes = await _context.Income
                                     .Include(x => x.Person)
@@ -187,6 +224,82 @@ namespace BudgetingApp.Web.Features
 
             return request;
         }
+
+        public sealed class BillTransferPivotRow
+        {
+            public int PersonId { get; set; }
+            public string PersonName { get; set; } = string.Empty;
+
+            // BankAccountId -> Amount
+            public Dictionary<int, decimal> AmountByAccountId { get; set; } = new();
+
+            public decimal Total => AmountByAccountId.Values.Sum();
+        }
+
+        public sealed class BillTransferPivotModel
+        {
+            public List<BankAccountColumn> Columns { get; set; } = new();
+            public List<BillTransferPivotRow> Rows { get; set; } = new();
+        }
+
+        private BillTransferPivotModel GetTransferOverview(List<IndexModel> billTransfers, List<BankAccount> bankAccounts)
+        {
+            var bankAccountLookup = bankAccounts.ToDictionary(a => a.BankAccountId, a => a.Name);
+
+            var raw = billTransfers
+                        .Where(e => e.BankAccountId != null)
+                        .SelectMany(e => e.PersonExpenses ?? Enumerable.Empty<PersonExpenseModel>(),
+                        (e, pe) => new
+                        {
+                            pe.PersonId,
+                            pe.PersonName,
+                            BankAccountId = e.BankAccountId!.Value,
+                            Share = e.FortnightlyCost * (decimal)pe.Percentage
+                        }).ToList();
+
+            var columns = raw
+                .Select(x => x.BankAccountId)
+                .Distinct()
+                .OrderBy(id => bankAccountLookup.TryGetValue(id, out var name) ? name : "Unknown")
+                .Select(id => new BankAccountColumn
+                {
+                    BankAccountId = id,
+                    BankAccountName = bankAccountLookup.TryGetValue(id, out var name) ? name : "Unknown"
+                }).ToList();
+
+            var rows = raw
+                        .GroupBy(x => new { x.PersonId, x.PersonName })
+                        .Select(g =>
+                        {
+                            var row = new BillTransferPivotRow
+                            {
+                                PersonId = g.Key.PersonId,
+                                PersonName = g.Key.PersonName
+                            };
+
+                            row.AmountByAccountId = g
+                                .GroupBy(x => x.BankAccountId)
+                                .ToDictionary(gg => gg.Key, gg => gg.Sum(v => v.Share));
+
+                            return row;
+                        })
+                        .OrderBy(r => r.PersonName)
+                        .ToList();
+
+            var result = new BillTransferPivotModel
+            {
+                Columns = columns,
+                Rows = rows
+            };
+
+            return result;
+        }
+    }
+
+    public class BankAccountColumn
+    {
+        public int BankAccountId { get; set; }
+        public string BankAccountName { get; set; } = string.Empty;
     }
 
     public class ChartData

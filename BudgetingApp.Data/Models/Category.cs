@@ -1,6 +1,6 @@
 ﻿namespace BudgetingApp.Data.Models
 {
-    public class Category
+    public class Category : ISoftDelete
     {
         public int CategoryId { get; set; }
         public string Name { get; set; }

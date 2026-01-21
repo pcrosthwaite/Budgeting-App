@@ -8,7 +8,8 @@
 @inject IMediator Mediator
 @inject IDialogService DialogService
 
-@if(Model != null){
+@if (Model != null)
+{
     <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
         <MudGrid>
             <MudItem xs="12">
@@ -23,6 +24,7 @@
                                 <MudLink OnClick="@(() => EditExpense(context.Item.ExpenseId))">@context.Item.Name</MudLink>
                             </CellTemplate>
                         </TemplateColumn>
+                        <PropertyColumn Property="x => x.BankAccountName" Title="Bank Acct" />
                         <PropertyColumn Property="x => x.CategoryName" Title="Category" />
                         <PropertyColumn Property="x => x.Cost" Title="Cost" Format="C" />
                         <PropertyColumn Property="x => x.FortnightlyCost" Title="Fortnightly Cost" Format="C" />
@@ -74,15 +76,33 @@
                     </MudItem>
                     <MudItem xs="12">
                         <h3>Bills Account Transfers</h3>
-                        <MudTable Items="@Model.BillTransferOverview" Hover="true" Bordered="true" Striped="true">
+
+                        <MudTable Items="@Model.BillTransferOverview.Rows" Hover="true" Bordered="true" Striped="true" Dense="true">
                             <HeaderContent>
                                 <MudTh>Person</MudTh>
-                                <MudTh Align="Right">Total Fortnightly</MudTh>
+
+                                @foreach (var col in Model.BillTransferOverview.Columns)
+                                {
+                                    <MudTh Align="Right">@col.BankAccountName</MudTh>
+                                }
+
+                                <MudTh Align="Right">Total</MudTh>
                             </HeaderContent>
-                            <RowTemplate>
-                                <MudTd DataLabel="Person">@context.PersonName</MudTd>
-                                <MudTd DataLabel="Total Fortnightly" Align="Right">
-                                    @context.Share.ToString("C2", CultureInfo.GetCultureInfo("en-AU"))
+
+                            <RowTemplate Context="row">
+                                <MudTd DataLabel="Person">@row.PersonName</MudTd>
+
+                                @foreach (var col in Model.BillTransferOverview.Columns)
+                                {
+                                    var amount = row.AmountByAccountId.TryGetValue(col.BankAccountId, out var v) ? v : 0m;
+
+                                    <MudTd Align="Right" DataLabel="@col.BankAccountName">
+                                        @(amount == 0m ? "-" : amount.ToString("C2", CultureInfo.GetCultureInfo("en-AU")))
+                                    </MudTd>
+                                }
+
+                                <MudTd Align="Right" DataLabel="Total">
+                                    @row.Total.ToString("C2", CultureInfo.GetCultureInfo("en-AU"))
                                 </MudTd>
                             </RowTemplate>
                         </MudTable>
@@ -166,4 +186,4 @@
             await OnInitializedAsync();
         }
     }
-    }
+}

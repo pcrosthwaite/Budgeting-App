@@ -1,6 +1,6 @@
 ﻿namespace BudgetingApp.Data.Models
 {
-    public class Income
+    public class Income : ISoftDelete
     {
         public int IncomeId { get; set; }
         public int? PersonId { get; set; }

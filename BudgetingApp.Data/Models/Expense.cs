@@ -1,12 +1,17 @@
 namespace BudgetingApp.Data.Models
 {
-    public class Expense
+    public class Expense : ISoftDelete
     {
         public int ExpenseId { get; set; }
         public string Name { get; set; } = string.Empty;
         public decimal Cost { get; set; }
         public TransactionFrequency Frequency { get; set; }
+
+        [Obsolete]
         public bool IncludeInBillsAccount { get; set; }
+
+        public int? BankAccountId { get; set; }
+        public BankAccount BankAccount { get; set; }
         public bool IsSubscription { get; set; }
 
         public List<PersonExpense> PersonExpenses { get; set; } = new();
