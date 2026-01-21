@@ -7,10 +7,8 @@ namespace BudgetingApp.Data.Models
         public decimal Cost { get; set; }
         public TransactionFrequency Frequency { get; set; }
 
-        [Obsolete]
-        public bool IncludeInBillsAccount { get; set; }
-
         public int? BankAccountId { get; set; }
+
         public BankAccount BankAccount { get; set; }
         public bool IsSubscription { get; set; }
 

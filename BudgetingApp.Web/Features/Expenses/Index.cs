@@ -16,7 +16,9 @@ namespace BudgetingApp.Web.Features.Expenses
         public string CategoryName { get; set; }
         public decimal Cost { get; set; }
         public TransactionFrequency Frequency { get; set; }
-        public bool IncludeInBillsAccount { get; set; }
+        public int? BankAccountId { get; set; }
+        public BankAccount BankAccount { get; set; }
+        public string BankAccountName => BankAccount?.Name ?? string.Empty;
         public bool IsSubscription { get; set; }
 
         // Navigation property for the many-to-many relationship

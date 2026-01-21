@@ -67,7 +67,6 @@ namespace BudgetingApp.Web.Features.Expenses
         public string Name { get; set; } = string.Empty;
         public decimal Cost { get; set; }
         public TransactionFrequency Frequency { get; set; }
-        public bool IncludeInBillsAccount { get; set; }
         public int? BankAccountId { get; set; }
         public bool IsSubscription { get; set; }
 

@@ -23,7 +23,7 @@
                         <PropertyColumn Property="x => x.CategoryName" Title="Category" />
                         <PropertyColumn Property="x => x.Cost" Title="Cost" Format="C" />
                         <PropertyColumn Property="x => x.Frequency.GetDescription()" Title="Frequency" />
-                        <PropertyColumn Property="x => x.IncludeInBillsAccount" Title="Include in Bills" />
+                        <PropertyColumn Property="x => x.BankAccountName" Title="Bank Acct" />
                         <PropertyColumn Property="x => x.IsSubscription" Title="Subscription" />
                         <TemplateColumn>
                             <CellTemplate>
@@ -35,27 +35,6 @@
                         </TemplateColumn>
                     </Columns>
                 </MudDataGrid>
-                @* <MudTable Items="@Model.Expenses" Hover="true" Bordered="true" Striped="true">
-                    <HeaderContent>
-                        <MudTh>Name</MudTh>
-                        <MudTh>Category</MudTh>
-                        <MudTh>Cost</MudTh>
-                        <MudTh>Frequency</MudTh>
-                        <MudTh>Include in Bills</MudTh>
-                        <MudTh>Actions</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Name">@context.Name</MudTd>
-                        <MudTd DataLabel="Name">@context.CategoryName</MudTd>
-                        <MudTd DataLabel="Cost">@context.Cost</MudTd>
-                        <MudTd DataLabel="Frequency">@context.Frequency</MudTd>
-                        <MudTd DataLabel="Include in Bills">@context.IncludeInBillsAccount</MudTd>
-                        <MudTd DataLabel="Actions">
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => OpenEditDialog(context.ExpenseId)">Edit</MudButton>
-                            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="() => OpenDeleteDialog(context.ExpenseId)">Delete</MudButton>
-                        </MudTd>
-                    </RowTemplate>
-                </MudTable> *@
             </div>
         </div>
     </MudContainer>
@@ -71,7 +50,7 @@
     private async Task OpenEditDialog(int? expenseId)
     {
         var parameters = new DialogParameters { ["ExpenseId"] = expenseId };
-        var dialog = await DialogService.ShowAsync<Editor>("Edit Expense", parameters, new DialogOptions(){ Position = DialogPosition.Center, MaxWidth = MaxWidth.Medium, FullWidth = true});
+        var dialog = await DialogService.ShowAsync<Editor>("Edit Expense", parameters, new DialogOptions() { Position = DialogPosition.Center, MaxWidth = MaxWidth.Medium, FullWidth = true });
         var result = await dialog.Result;
 
         if (!result?.Canceled ?? true)
