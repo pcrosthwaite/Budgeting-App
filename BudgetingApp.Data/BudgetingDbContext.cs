@@ -32,6 +32,7 @@ namespace BudgetingApp.Data
         public DbSet<Bank> Banks { get; set; }
         public DbSet<BankAccount> BankAccounts { get; set; }
         public DbSet<Expense> Expenses { get; set; }
+        public DbSet<ExpenseHistory> ExpenseHistories { get; set; }
         public DbSet<Income> Income { get; set; }
         public DbSet<Person> Persons { get; set; }
         public DbSet<PersonExpense> PersonExpenses { get; set; }
@@ -47,6 +48,7 @@ namespace BudgetingApp.Data
             modelBuilder.ApplyConfiguration(new BankAccountCfg());
             modelBuilder.ApplyConfiguration(new CategoryCfg());
             modelBuilder.ApplyConfiguration(new ExpenseCfg());
+            modelBuilder.ApplyConfiguration(new ExpenseHistoryCfg());
             modelBuilder.ApplyConfiguration(new IncomeCfg());
             modelBuilder.ApplyConfiguration(new PersonCfg());
             modelBuilder.ApplyConfiguration(new PersonExpenseCfg());

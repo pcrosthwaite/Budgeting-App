@@ -1,0 +1,176 @@
+﻿@page "/expensehistory"
+@using BudgetingApp.Web.Shared
+@using ApexCharts
+@inject IMediator Mediator
+@inject IDialogService DialogService
+
+@if (Model != null)
+{
+    <MudCard>
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudText Typo="Typo.h6">Expense Cost History Over Time</MudText>
+                <MudText Typo="Typo.body2">Showing @Model.Expenses.Count expense(s) with cost changes</MudText>
+            </CardHeaderContent>
+            <CardHeaderActions>
+                <MudSelect @bind-Value="SelectedYears" Label="Years" Variant="Variant.Outlined" Dense="true">
+                    <MudSelectItem Value="1">1 Year</MudSelectItem>
+                    <MudSelectItem Value="2">2 Years</MudSelectItem>
+                    <MudSelectItem Value="3">3 Years</MudSelectItem>
+                    <MudSelectItem Value="5">5 Years</MudSelectItem>
+                </MudSelect>
+            </CardHeaderActions>
+        </MudCardHeader>
+        <MudCardContent>
+            @if (Model.Expenses?.Any() == true)
+            {
+                <ApexChart TItem="ExpenseHistoryPoint"
+                           Options="@ChartOptions"
+                           Height="450">
+
+                    @foreach (var series in ApexSeries)
+                    {
+                        <ApexPointSeries TItem="ExpenseHistoryPoint"
+                                         Name="@series.ExpenseName"
+                                         Items="@series.HistoryPoints"
+                                         SeriesType="SeriesType.Line"
+                                         XValue="p => p.Date"
+                                         YValue="p => p.Cost" />
+                    }
+                </ApexChart>
+            }
+            else
+            {
+                <MudAlert Severity="Severity.Info">
+                    No expense history data available for the selected time period.
+                    <br />
+                    <small>Cost changes are tracked when you edit expense amounts.</small>
+                </MudAlert>
+            }
+        </MudCardContent>
+    </MudCard>
+}
+
+@code {
+    private IndexQuery Model { get; set; }
+    private int _selectedYears = 1;
+
+    public int SelectedYears
+    {
+        get => _selectedYears;
+        set
+        {
+            _selectedYears = value;
+            _ = LoadDataAsync();
+        }
+    }
+
+    private List<ExpenseHistoryData> ApexSeries { get; set; } = new();
+
+    // private class ExpenseSeries
+    // {
+    //     public string Name { get; set; } = string.Empty;
+    //     public List<ExpenseHistoryPoint> Points { get; set; } = new();
+    // }
+
+    private ApexChartOptions<ExpenseHistoryPoint> ChartOptions { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        Model = await Mediator.Send(new IndexQuery { Years = SelectedYears });
+        UpdateChart();
+    }
+
+    private void UpdateChart()
+    {
+        ApexSeries.Clear();
+
+        if (Model?.Expenses?.Any() != true)
+        {
+            return;
+        }
+
+        // Union of all dates across all expenses
+        var allDates = Model.Expenses
+            .SelectMany(e => e.HistoryPoints.Select(hp => hp.Date))
+            .Distinct()
+            .OrderBy(d => d)
+            .ToList();
+
+        // Control label density via ticks (instead of blank labels)
+        var maxTicks = SelectedYears switch
+        {
+            1 => 6,
+            2 => 8,
+            3 => 12,
+            5 => 10,
+            _ => 12
+        };
+
+        ChartOptions = new ApexChartOptions<ExpenseHistoryPoint>
+        {
+            Chart = new Chart
+            {
+                Id = "expense-history-chart",
+                Toolbar = new Toolbar { Show = true }
+            },
+
+            Markers = new Markers
+            {
+                Size = 4,
+                Hover = new MarkersHover { Size = 7 }
+            },
+
+            Xaxis = new XAxis
+            {
+                Type = XAxisType.Datetime,
+                TickAmount = maxTicks
+            },
+
+            Tooltip = new Tooltip
+            {
+                Shared = true,        // <-- key
+                Intersect = false,
+                FollowCursor = true,
+                X = new TooltipX { Format = SelectedYears >= 3 ? "MMM yy" : "dd MMM yyyy" },
+                Y = new TooltipY { Formatter = "function (val) { return new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD'}).format(val); }" }
+            }
+        };
+
+        foreach (var expense in Model.Expenses)
+        {
+            var points = new List<ExpenseHistoryPoint>(allDates.Count);
+
+            foreach (var date in allDates)
+            {
+                var relevantPoint = expense.HistoryPoints
+                    .Where(hp => hp.Date <= date)
+                    .OrderByDescending(hp => hp.Date)
+                    .FirstOrDefault();
+
+                points.Add(new ExpenseHistoryPoint
+                {
+                    Date = date,
+                    Cost = relevantPoint?.Cost ?? 0m
+                });
+            }
+
+            if (points.Any(p => p.Cost > 0m))
+            {
+                ApexSeries.Add(new ExpenseHistoryData
+                {
+                    ExpenseId = expense.ExpenseId,
+                    ExpenseName = expense.ExpenseName,
+                    HistoryPoints = points
+                });
+            }
+        }
+
+        StateHasChanged();
+    }
+}

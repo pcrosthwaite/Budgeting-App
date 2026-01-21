@@ -13,6 +13,7 @@ namespace BudgetingApp.Data.Models
         public bool IsSubscription { get; set; }
 
         public List<PersonExpense> PersonExpenses { get; set; } = new();
+        public List<ExpenseHistory> ExpenseHistory { get; set; } = new();
 
         public int? CategoryId { get; set; }
         public Category Category { get; set; }

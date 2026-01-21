@@ -114,6 +114,8 @@ namespace BudgetingApp.Web.Features.Expenses
         {
             var dest = default(Expense);
             var existingPersonIds = new List<int>();
+            var shouldTrackCostChange = false;
+            var previousCost = 0m;
 
             if (request.ExpenseId != default)
             {
@@ -121,6 +123,12 @@ namespace BudgetingApp.Web.Features.Expenses
                 if (dest == null)
                 {
                     throw new KeyNotFoundException($"Key not found {request.ExpenseId}.");
+                }
+
+                if (dest.Cost != request.Cost)
+                {
+                    shouldTrackCostChange = true;
+                    previousCost = dest.Cost;
                 }
 
                 existingPersonIds = await _context.PersonExpenses
@@ -131,6 +139,7 @@ namespace BudgetingApp.Web.Features.Expenses
             else
             {
                 dest = new Expense();
+                shouldTrackCostChange = true;
             }
 
             _mapper.Map(request, dest);
@@ -138,6 +147,23 @@ namespace BudgetingApp.Web.Features.Expenses
             _context.AddOrUpdate(dest, x => x.ExpenseId);
 
             await _context.SaveChangesAsync();
+
+            if (shouldTrackCostChange)
+            {
+                var expenseHistory = new Data.Models.ExpenseHistory
+                {
+                    ExpenseId = dest.ExpenseId,
+                    Cost = dest.Cost,
+                    ChangedDate = DateTime.UtcNow,
+                    Notes = request.ExpenseId == default
+                        ? "Initial expense creation"
+                        : $"Cost changed from ${previousCost:F2} to ${dest.Cost:F2}"
+                };
+
+                _context.AddOrUpdate(expenseHistory, x => x.ExpenseHistoryId);
+
+                await _context.SaveChangesAsync();
+            }
 
             // Handle new persons in the request
             var newPersons = request.PersonExpenses
