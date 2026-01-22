@@ -71,7 +71,7 @@ namespace BudgetingApp.Web.Features.Tools.LoanRepayments
             {
                 model.Alerts.Add(new AlertModel
                 {
-                    Severity = Severity.Warning,
+                    Severity = Severity.Success,
                     Message = $"Final scheduled payment ({paymentDates[^1]:d}) is before target date ({request.TargetDate:d})."
                 });
             }
