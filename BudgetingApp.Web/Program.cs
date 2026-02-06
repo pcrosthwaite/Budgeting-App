@@ -2,6 +2,8 @@ using ApexCharts;
 using BudgetingApp.Data;
 using BudgetingApp.Data.Services;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using MudBlazor.Services;
 using System.Reflection;
 
@@ -19,8 +21,21 @@ builder.Services.AddMudServices();
 builder.Services.AddMudBlazorDialog(); // Add MudBlazor dialog service
 
 // Add DbContext with SQLite configuration
-
 services.AddDbContexts<BudgetingDbContext>(Configuration, "DefaultConnection", Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient); //Transient for Blazor
+                                                                                                                                                    //services.AddDbContexts<MariaDbContext>(Configuration, "MariaDbConnection", Microsoft.Extensions.DependencyInjection.ServiceLifetime.Transient);
+
+// Add MariaDB DbContext
+
+//var mariaDbConnectionString = Configuration.GetConnectionString("MariaDbConnection");
+//services.AddDbContext<MariaDbContext>(options =>
+//{
+//    var serverVersion = ServerVersion.AutoDetect(mariaDbConnectionString);
+//    options.UseMySql(mariaDbConnectionString, serverVersion, o => o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery))
+//           .EnableDetailedErrors();
+//#if DEBUG
+//    options.EnableSensitiveDataLogging();
+//#endif
+//}, contextLifetime: ServiceLifetime.Transient, optionsLifetime: ServiceLifetime.Singleton);
 
 var assemblies = new List<Assembly>();
 //var hfAssemblies = AssemblyHelper.GetAssemblies("vDia.Hangfire").ToList();

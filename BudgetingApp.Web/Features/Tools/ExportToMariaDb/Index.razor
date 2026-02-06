@@ -1,0 +1,154 @@
+@page "/tools/export-to-mariadb"
+@using BudgetingApp.Web.Shared
+@using MediatR
+@using MudBlazor
+@inject ISender Mediator
+
+<MudPaper Class="pa-4">
+
+    @* <MudText Typo="Typo.h5">Export to MariaDB</MudText>
+    <MudText Typo="Typo.body2" Class="mt-2 mb-4">
+        Export all data from SQLite database to MariaDB. Connection string is configured in appsettings.json.
+    </MudText>
+
+    <MudForm @ref="_form" Class="mt-4">
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6">
+                <MudSwitch @bind-Value="_createTables" 
+                           Color="Color.Primary" 
+                           Label="Create tables if they don't exist" />
+            </MudItem>
+
+            <MudItem xs="12" sm="6">
+                <MudSwitch @bind-Value="_clearExistingData" 
+                           Color="Color.Warning" 
+                           Label="Clear existing data before export" />
+            </MudItem>
+
+            @if (_clearExistingData)
+            {
+                <MudItem xs="12">
+                    <MudAlert Severity="Severity.Warning" Dense="true">
+                        <strong>Warning:</strong> All existing data in the MariaDB database will be deleted before export!
+                    </MudAlert>
+                </MudItem>
+            }
+
+            <MudItem xs="12">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           OnClick="ExportAsync"
+                           Disabled="_isBusy"
+                           StartIcon="@Icons.Material.Filled.CloudUpload">
+                    @if (_isBusy)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                        <span>Exporting...</span>
+                    }
+                    else
+                    {
+                        <span>Export to MariaDB</span>
+                    }
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudForm>
+
+    @if (_model?.Alerts?.Any() == true)
+    {
+        <MudDivider Class="my-4" />
+        <MudText Typo="Typo.h6" Class="mb-3">Export Log</MudText>
+        
+        <div class="export-log">
+            @foreach (var alert in _model.Alerts)
+            {
+                <MudAlert Severity="@alert.Severity" Dense="true" Class="mb-2">
+                    @alert.Message
+                </MudAlert>
+            }
+        </div>
+    }
+
+    @if (_model?.IsSuccess == true && _model.Stats != null)
+    {
+        <MudDivider Class="my-4" />
+        <MudText Typo="Typo.h6" Class="mb-3">Export Summary</MudText>
+
+        <MudSimpleTable Dense="true" Hover="true" Bordered="true" Striped="true">
+            <thead>
+                <tr>
+                    <th>Entity</th>
+                    <th style="text-align: right;">Records Exported</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Banks</td>
+                    <td style="text-align: right;">@_model.Stats.BanksExported</td>
+                </tr>
+                <tr>
+                    <td>Bank Accounts</td>
+                    <td style="text-align: right;">@_model.Stats.BankAccountsExported</td>
+                </tr>
+                <tr>
+                    <td>Categories</td>
+                    <td style="text-align: right;">@_model.Stats.CategoriesExported</td>
+                </tr>
+                <tr>
+                    <td>Persons</td>
+                    <td style="text-align: right;">@_model.Stats.PersonsExported</td>
+                </tr>
+                <tr>
+                    <td>Incomes</td>
+                    <td style="text-align: right;">@_model.Stats.IncomesExported</td>
+                </tr>
+                <tr>
+                    <td>Expenses</td>
+                    <td style="text-align: right;">@_model.Stats.ExpensesExported</td>
+                </tr>
+                <tr>
+                    <td>Person Expenses</td>
+                    <td style="text-align: right;">@_model.Stats.PersonExpensesExported</td>
+                </tr>
+                <tr>
+                    <td>Expense Histories</td>
+                    <td style="text-align: right;">@_model.Stats.ExpenseHistoriesExported</td>
+                </tr>
+                <tr style="font-weight: bold; background-color: var(--mud-palette-background-grey);">
+                    <td><strong>Total</strong></td>
+                    <td style="text-align: right;"><strong>@_model.Stats.TotalRecords</strong></td>
+                </tr>
+            </tbody>
+        </MudSimpleTable>
+    } *@
+
+</MudPaper>
+
+@code {
+    // private MudForm _form = null!;
+    // private bool _isBusy;
+    // private bool _createTables = true;
+    // private bool _clearExistingData = false;
+    // private IndexModel? _model;
+
+    // private async Task ExportAsync()
+    // {
+    //     _isBusy = true;
+    //     _model = null;
+    //     StateHasChanged();
+
+    //     try
+    //     {
+    //         _model = await Mediator.Send(new IndexQuery
+    //         {
+    //             CreateTables = _createTables,
+    //             ClearExistingData = _clearExistingData
+    //         });
+    //     }
+    //     finally
+    //     {
+    //         _isBusy = false;
+    //         StateHasChanged();
+    //     }
+    // }
+}

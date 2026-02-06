@@ -9,7 +9,7 @@ namespace BudgetingApp.Data.Configurations
         public void Configure(EntityTypeBuilder<Category> builder)
         {
             builder.Property(ec => ec.Name).IsRequired().HasMaxLength(100);
-            builder.Property(ec => ec.HexColourCode).HasMaxLength(7);
+            builder.Property(ec => ec.HexColourCode).HasMaxLength(9);
         }
     }
 }
