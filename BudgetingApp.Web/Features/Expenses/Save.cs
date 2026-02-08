@@ -77,8 +77,8 @@ namespace BudgetingApp.Web.Features.Expenses
         public List<PersonExpenseModel> PersonExpenses { get; set; } = new();
 
         public List<Person> Persons { get; set; }
-        public List<Data.Models.Category> ExpenseCategories { get; set; }
-        public List<BankAccount> BankAccounts { get; set; }
+        public List<Data.Models.Category> ExpenseCategories { get; set; } = new();
+        public List<BankAccount> BankAccounts { get; set; } = new();
         public decimal FortnightlyCost { get; set; }
     }
 

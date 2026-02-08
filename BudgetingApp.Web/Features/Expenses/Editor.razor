@@ -8,7 +8,7 @@
     <MudGrid>
         <MudItem xs="12" md="6">
             <MudTextField @bind-Value="Model.Name" Label="Name" Variant="Variant.Outlined" FullWidth="true" />
-            <MudNumericField @bind-Value="Model.Cost" Label="Cost" Variant="Variant.Outlined" FullWidth="true" Adornment="Adornment.Start" AdornmentText="$" HideSpinButtons />
+            <MudNumericField @bind-Value="Model.Cost" Label="Cost" Variant="Variant.Outlined" FullWidth="true" Format="F2" Adornment="Adornment.Start" AdornmentText="$" HideSpinButtons />
             <MudSelect @bind-Value="Model.Frequency" Label="Frequency" Variant="Variant.Outlined" FullWidth="true">
                 @foreach (var itm in Enum.GetValues(typeof(TransactionFrequency)).Cast<TransactionFrequency>())
                 {
