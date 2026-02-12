@@ -16,7 +16,7 @@
                 <MudText Typo="Typo.h3">Budget Overview</MudText>
             </MudItem>
             <MudItem xs="6">
-                <MudDataGrid Items="@Model.Expenses" Hover="true" Bordered="true" Striped="true">
+                <MudDataGrid Items="@Model.Expenses" Hover="true" Bordered="true" Striped="true" Filterable FilterCaseSensitivity="DataGridFilterCaseSensitivity.CaseInsensitive">
                     <Columns>
                         @* <PropertyColumn Property="x => x.Name" Title="Expense" /> *@
                         <TemplateColumn Title="Expense">
